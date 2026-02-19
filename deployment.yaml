@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fortress-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: fortress
+  template:
+    metadata:
+      labels:
+        app: fortress
+    spec:
+      containers:
+      - name: fortress-container
+        image: fortress-project:1.0
+        imagePullPolicy: Never   # Use this if image is local
+        ports:
+        - containerPort: 5000
