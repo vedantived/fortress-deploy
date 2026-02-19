@@ -15,6 +15,5 @@ spec:
       containers:
       - name: fortress-container
         image: fortress-project:1.0
-        imagePullPolicy: Never   # Use this if image is local
         ports:
         - containerPort: 5000
