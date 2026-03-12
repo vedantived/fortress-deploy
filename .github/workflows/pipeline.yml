@@ -1,0 +1,23 @@
+name: Fortress Deploy Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  fortress-ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Print Hello (Pipeline Test)
+        run: echo "Fortress Deploy CI Pipeline Running"
+
+      - name: Show Repository Files
+        run: ls -R
