@@ -14,10 +14,14 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Print Hello (Pipeline Test)
-        run: echo "Fortress Deploy CI Pipeline Running"
+      - name: Install Gitleaks
+        run: |
+          wget https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64 -O gitleaks
+          chmod +x gitleaks
+          sudo mv gitleaks /usr/local/bin/
 
-      - name: Show Repository Files
-        run: ls -R
+      - name: Run Gitleaks Secret Scan
+        run: |
+          gitleaks detect --source . --verbose
