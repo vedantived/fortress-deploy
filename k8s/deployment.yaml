@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fortress-deployment
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: fortress
+  template:
+    metadata:
+      labels:
+        app: fortress
+    spec:
+      containers:
+      - name: fortress-container
+        image: fortress-project:1.0
+
+        # Always pull latest image during deployment
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5000
+  
+# This probe checks if the application is READY to receive traffic.
+# Kubernetes will only send traffic to the pod if this probe succeeds.
+# If the readiness probe fails, the pod will be temporarily removed
+# from the service load balancer until it becomes healthy again.
+  readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+
+# Liveness Probe
+# ----------------
+# This probe checks if the application is still running correctly.
+# If the liveness probe fails repeatedly, Kubernetes will automatically
+# restart the container to recover from a failure or deadlock state.
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 5000
+    initialDelaySeconds: 10
+    periodSeconds: 10
