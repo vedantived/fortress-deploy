@@ -34,3 +34,7 @@ jobs:
       - name: Build Docker Image
         run: |
           docker build -t fortress:latest -f docker/Dockerfile .
+
+      - name: Scan Docker Image for Vulnerabilities
+        run: |
+         trivy image --severity HIGH,CRITICAL --exit-code 1 fortress:latest
