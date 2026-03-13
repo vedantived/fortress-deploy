@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
 
 jobs:
   fortress-ci:
@@ -33,3 +30,7 @@ jobs:
       - name: Run Trivy Dependency Scan
         run: |
           trivy fs --severity HIGH,CRITICAL --exit-code 1 .
+
+      - name: Build Docker Image
+        run: |
+          docker build -t fortress:latest -f docker/Dockerfile .
