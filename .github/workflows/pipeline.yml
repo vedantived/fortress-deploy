@@ -1,0 +1,81 @@
+name: Fortress Deploy Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  fortress-ci:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+
+      - name: Run Gitleaks Secret Scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
+      - name: Install Trivy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget apt-transport-https gnupg lsb-release
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+          echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install -y trivy
+
+
+      - name: Run Trivy Dependency Scan
+        run: |
+          trivy fs --severity HIGH,CRITICAL --exit-code 1 .
+
+
+      - name: Build Docker Image
+        run: |
+          docker build -t fortress:latest -f docker/Dockerfile .
+
+
+      - name: Scan Docker Image for Vulnerabilities
+        run: |
+          trivy image --severity HIGH,CRITICAL --exit-code 0 fortress:latest
+
+
+      # -------------------------------
+      # AWS ECR LOGIN
+      # -------------------------------
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+
+      # -------------------------------
+      # TAG IMAGE FOR ECR
+      # -------------------------------
+
+      - name: Tag Docker Image
+        run: |
+          docker tag fortress:latest 584673484425.dkr.ecr.ap-south-1.amazonaws.com/fortress:latest
+
+
+      # -------------------------------
+      # PUSH IMAGE TO ECR
+      # -------------------------------
+
+      - name: Push Image to Amazon ECR
+        run: |
+          docker push 584673484425.dkr.ecr.ap-south-1.amazonaws.com/fortress:latest
