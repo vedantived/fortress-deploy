@@ -1,14 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: fortress-deployment
+  name: fortress
 spec:
   replicas: 2
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 1
   selector:
     matchLabels:
       app: fortress
@@ -17,34 +12,25 @@ spec:
       labels:
         app: fortress
     spec:
+      imagePullSecrets:
+        - name: ecr-secret
       containers:
-      - name: fortress-container
-        image: fortress-project:1.0
+        - name: fortress
+          image: 584673484425.dkr.ecr.ap-south-1.amazonaws.com/fortress:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000
 
-        # Always pull latest image during deployment
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 5000
-  
-# This probe checks if the application is READY to receive traffic.
-# Kubernetes will only send traffic to the pod if this probe succeeds.
-# If the readiness probe fails, the pod will be temporarily removed
-# from the service load balancer until it becomes healthy again.
-  readinessProbe:
-          httpGet:
-            path: /health
-            port: 5000
-          initialDelaySeconds: 5
-          periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10
 
-# Liveness Probe
-# ----------------
-# This probe checks if the application is still running correctly.
-# If the liveness probe fails repeatedly, Kubernetes will automatically
-# restart the container to recover from a failure or deadlock state.
-  livenessProbe:
-    httpGet:
-      path: /health
-      port: 5000
-    initialDelaySeconds: 10
-    periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 20

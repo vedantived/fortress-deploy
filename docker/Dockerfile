@@ -6,6 +6,8 @@ COPY requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
+ # added for testing purpose
+RUN apt-get update && apt-get install -y curl   
 COPY app/app.py .
 
 # Create non-root user for better security
